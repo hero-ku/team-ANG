@@ -5,3 +5,4 @@ Section 255
 - Andrew Lynch
 - Gaurav Paneru
 - Nischal Rimal
+- Manish Gadal
