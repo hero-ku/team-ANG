@@ -15,13 +15,18 @@ public class Pawn extends Piece {
     }
 
     @Override
+    public String getPieceLetter() {
+        return "P";
+    }
+
+    @Override
     protected Collection<Position> candidateMoves(Board board) {
         Position position = this.getPosition();
         List<Position> candidates = new ArrayList<>(List.of(
                 position.add(new Position(this.getDirection(), 0))
         ));
 
-        if (this.getColor() == Color.WHITE && position.row() == 1 || this.getColor() == Color.BLACK && position.row() == 6) {
+        if (this.getColor() == Color.WHITE && position.row() == 6 || this.getColor() == Color.BLACK && position.row() == 1) {
             candidates.add(
                     position.add(new Position(this.getDirection() * 2, 0))
             );

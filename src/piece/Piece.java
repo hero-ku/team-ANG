@@ -7,7 +7,7 @@ import utils.Position;
 import java.util.Collection;
 
 public abstract class Piece {
-    protected final Position position;
+    protected Position position;
     protected final Color color;
 
     public Piece(Color color, Position position)  {
@@ -23,7 +23,32 @@ public abstract class Piece {
     }
 
     protected int getDirection() {
-        return this.color == Color.WHITE ? 1 : -1;
+        return this.color == Color.WHITE ? -1 : 1;
+    }
+
+    /**
+     * Moves the piece to the given position.
+     *
+     * @param position The position to move to.
+     */
+    public void move(Position position) {
+        this.position = position;
+    }
+
+    /**
+     * Returns a letter that represents the piece (e.g. 'K' for King).
+     *
+     * @return The letter.
+     */
+    public abstract String getPieceLetter();
+
+    /**
+     * Returns a code that represents the piece (e.g. 'wK' for white King).
+     *
+     * @return The code.
+     */
+    public String getDisplayCode() {
+        return (this.color == Color.WHITE ? "w" : "b") + getPieceLetter();
     }
 
     /**

@@ -14,6 +14,11 @@ public class King extends Piece {
     }
 
     @Override
+    public String getPieceLetter() {
+        return "K";
+    }
+
+    @Override
     protected List<Position> candidateMoves(Board board) {
         List<Position> candidates = new ArrayList<>();
 

@@ -15,6 +15,11 @@ public class Bishop extends Piece {
     }
 
     @Override
+    public String getPieceLetter() {
+        return "B";
+    }
+
+    @Override
     protected Collection<Position> candidateMoves(Board board) {
         List<Position> candidates = new ArrayList<>();
 

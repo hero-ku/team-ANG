@@ -15,6 +15,11 @@ public class Rook extends Piece {
     }
 
     @Override
+    public String getPieceLetter() {
+        return "R";
+    }
+
+    @Override
     protected Collection<Position> candidateMoves(Board board) {
         List<Position> candidates = new ArrayList<>();
 
