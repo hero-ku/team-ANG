@@ -10,5 +10,5 @@ Section 255
 # Instructions
 - Clone the repository.
 - Open a shell terminal (Bash, Zsh, Git Bash, etc.) in the directory.
-- Run `javac -d out $(find src -name "*.java")`.
-- Run `java -classpath out/ Main`.
+- Run `javac -d out $(find src -name "*.java")` to compile the program.
+- Run `java -classpath out/ Main` to run the program.
