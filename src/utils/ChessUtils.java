@@ -20,10 +20,12 @@ public final class ChessUtils {
     private ChessUtils() {
         throw new UnsupportedOperationException("ChessUtils is a utility class.");
     }
-
+    /**
     // ------------------------------------------------------------------ //
     // Algebraic notation helpers //
     // ------------------------------------------------------------------ //
+
+    */
 
     /**
      * Converts a {@link Position} to its standard algebraic label (e.g. "E4").
