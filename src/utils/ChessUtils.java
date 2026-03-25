@@ -22,77 +22,6 @@ public final class ChessUtils {
     }
 
     // ------------------------------------------------------------------ //
-    // Ray scanning //
-    // ------------------------------------------------------------------ //
-
-    /**
-     * Walks one directional ray from {@code origin}, collecting every square
-     * reachable by a sliding piece (Rook, Bishop, or Queen).
-     *
-     * The ray continues outward, square by square, until it hits the edge
-     * of the board, a friendly piece, or an opponent's piece (which is
-     * included as a capture target before stopping).
-     *
-     * @param board    current board state
-     * @param origin   starting square (the piece's current position)
-     * @param rowDelta row step per iteration: -1 (up), 0, or +1 (down)
-     * @param colDelta col step per iteration: -1 (left), 0, or +1 (right)
-     * @param color    color of the moving piece (used to detect friendly pieces)
-     * @return ordered list of reachable squares along this ray
-     */
-    public static List<Position> scanRay(Board board,
-            Position origin,
-            int rowDelta,
-            int colDelta,
-            pieces.Color color) {
-        List<Position> moves = new ArrayList<>();
-
-        int row = origin.getRow() + rowDelta;
-        int col = origin.getColumn() + colDelta;
-
-        while (true) {
-            Position next = new Position(row, col);
-
-            if (!board.isWithinBounds(next))
-                break;
-
-            if (board.isEmpty(next)) {
-                moves.add(next); // open square — keep going
-            } else if (board.isOpponentPiece(next, color)) {
-                moves.add(next); // capture — stop after
-                break;
-            } else {
-                break; // friendly piece — blocked
-            }
-
-            row += rowDelta;
-            col += colDelta;
-        }
-
-        return moves;
-    }
-
-    /**
-     * Applies {@link #scanRay} across multiple directions and combines the results.
-     * 
-     * @param board      current board state
-     * @param origin     starting square
-     * @param directions array of {rowDelta, colDelta} pairs
-     * @param color      color of the moving piece
-     * @return combined list of all reachable squares across every direction
-     */
-    public static List<Position> scanAllRays(Board board,
-            Position origin,
-            int[][] directions,
-            pieces.Color color) {
-        List<Position> moves = new ArrayList<>();
-        for (int[] dir : directions) {
-            moves.addAll(scanRay(board, origin, dir[0], dir[1], color));
-        }
-        return moves;
-    }
-
-    // ------------------------------------------------------------------ //
     // Algebraic notation helpers //
     // ------------------------------------------------------------------ //
 
@@ -107,8 +36,8 @@ public final class ChessUtils {
     public static String toAlgebraic(Position position) {
         if (position == null)
             return "??";
-        char file = (char) ('A' + position.getColumn());
-        int rank = 8 - position.getRow();
+        char file = (char) ('A' + position.column());
+        int rank = 8 - position.row();
         return "" + file + rank;
     }
 
