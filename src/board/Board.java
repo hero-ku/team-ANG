@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/*
+/**
  * Represents the 8x8 chessboard and tracks captured pieces.
  * Responsibilities: holds the grid of Piece objects, enforces bounds checks,
  * applies moves, and renders the board to the CLI.
@@ -14,20 +14,25 @@ import java.util.List;
  */
 public class Board {
 
-    // 8x8 grid; null entries represent empty squares
-    private final Piece[][] squares;
-
-    // Pieces removed from play, in the order they were captured
+    /**
+     *8x8 grid; null entries represent empty squares
+      private final Piece[][] squares;
+     */
+    /**
+     *Pieces removed from play, in the order they were captured
+     */
     private final List<Piece> capturedPieces;
 
-    // Creates a new board and places all pieces in their standard starting positions
+    /**
+     *Creates a new board and places all pieces in their standard starting positions
+     */
     public Board() {
         this.squares = new Piece[8][8];
         this.capturedPieces = new ArrayList<>();
         initialize();
     }
 
-    /*
+    /**
      * Resets the board to the standard chess starting position.
      * Clears all squares and the captured-piece history, then places
      * the back ranks (rows 0 and 7) and pawn ranks (rows 1 and 6).
@@ -42,7 +47,9 @@ public class Board {
         }
         capturedPieces.clear();
 
-        // Black back rank (row 0)
+        /**
+         *Black back rank (row 0)
+         */
         squares[0][0] = new Rook(Color.BLACK, new Position(0, 0));
         squares[0][1] = new Knight(Color.BLACK, new Position(0, 1));
         squares[0][2] = new Bishop(Color.BLACK, new Position(0, 2));
@@ -52,17 +59,23 @@ public class Board {
         squares[0][6] = new Knight(Color.BLACK, new Position(0, 6));
         squares[0][7] = new Rook(Color.BLACK, new Position(0, 7));
 
-        // Black pawns (row 1)
+        /**
+         *Black pawns (row 1)
+         */
         for (int column = 0; column < 8; column++) {
             squares[1][column] = new Pawn(Color.BLACK, new Position(1, column));
         }
 
-        // White pawns (row 6)
+        /**
+         *White pawns (row 6)
+         */
         for (int column = 0; column < 8; column++) {
             squares[6][column] = new Pawn(Color.WHITE, new Position(6, column));
         }
 
-        // White back rank (row 7)
+        /**
+         *White back rank (row 7)
+         */
         squares[7][0] = new Rook(Color.WHITE, new Position(7, 0));
         squares[7][1] = new Knight(Color.WHITE, new Position(7, 1));
         squares[7][2] = new Bishop(Color.WHITE, new Position(7, 2));
@@ -73,7 +86,9 @@ public class Board {
         squares[7][7] = new Rook(Color.WHITE, new Position(7, 7));
     }
 
-    // Returns the piece at the given position, or null if the square is empty or out of bounds
+    /**
+     *Returns the piece at the given position, or null if the square is empty or out of bounds
+     */
     public Piece getPiece(Position position) {
         if (!isWithinBounds(position)) {
             return null;
@@ -81,19 +96,25 @@ public class Board {
         return squares[position.getRow()][position.getColumn()];
     }
 
-    // Returns true if the position falls within the 8x8 grid (row and column both in [0, 7])
+    /**
+     *Returns true if the position falls within the 8x8 grid (row and column both in [0, 7])
+     */
     public boolean isWithinBounds(Position position) {
         return position != null
                 && position.getRow() >= 0 && position.getRow() < 8
                 && position.getColumn() >= 0 && position.getColumn() < 8;
     }
 
-    // Returns true if the position is on the board and holds no piece
+    /**
+     *Returns true if the position is on the board and holds no piece
+     */
     public boolean isEmpty(Position position) {
         return isWithinBounds(position) && getPiece(position) == null;
     }
 
-    // Returns true if the square holds a piece belonging to the opponent of the given color
+    /**
+     *Returns true if the square holds a piece belonging to the opponent of the given color
+     */
     public boolean isOpponentPiece(Position position, Color color) {
         Piece piece = getPiece(position);
         return piece != null && piece.getColor() != color;
@@ -104,7 +125,7 @@ public class Board {
         return Collections.unmodifiableList(capturedPieces);
     }
 
-    /*
+    /**
      * Attempts to move a piece from 'from' to 'to' for the given player color.
      * The move is rejected if:
      *   - either position is out of bounds
@@ -138,7 +159,7 @@ public class Board {
         return true;
     }
 
-    /*
+    /**
      * Prints the current board to standard output with file labels (A-H)
      * and rank labels (1-8) on all four sides.
      * Empty squares are shown as "##"; occupied squares use the piece's display code.
@@ -176,7 +197,7 @@ public class Board {
         System.out.println();
     }
 
-    /*
+    /**
      * Phase 1 stub - always returns false.
      * Full check detection (scanning opponent attack lines) will be added in Phase 2.
      */
@@ -184,7 +205,7 @@ public class Board {
         return false;
     }
 
-    /*
+    /**
      * Phase 1 stub - always returns false.
      * Full checkmate detection depends on isCheck() and will be added in Phase 2.
      */
