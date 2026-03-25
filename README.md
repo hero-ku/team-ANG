@@ -14,6 +14,9 @@ Section 255
 - Run `java -classpath out/ Main` to run the program.
 - Or use IntelliJ IDEA to run the program.
 
+## How to play
+- On your turn, enter the current position of the piece you want to use, case-insensitive, followed by space and the position you want to move it to. For example, these are all valid inputs: `e2 e4`, ` e2  E4`, `    E2 E4`. 
+
 # Java Details
 This program was compiled and tested for:
 ```
