@@ -1,7 +1,7 @@
 package game;
 
 import board.Board;
-import pieces.Color;
+import utils.Color;
 
 import java.util.Scanner;
 
