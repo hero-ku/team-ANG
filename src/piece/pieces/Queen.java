@@ -41,13 +41,6 @@ public class Queen extends Piece {
             while (board.isWithinBounds(new Position(row, column))) {
                 Position candidate = new Position(row, column);
 
-                if (!board.isEmpty(candidate)) {
-                    if (board.isOpponentPiece(candidate, color)) {
-                        candidates.add(candidate); // can capture, then stop
-                    }
-                    break; // blocked by any piece — friendly or enemy
-                }
-
                 candidates.add(candidate);
                 row    += direction[0];
                 column += direction[1];

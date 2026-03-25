@@ -36,9 +36,7 @@ public class Knight extends Piece {
                     position.column() + direction[1]
             );
 
-            if (board.isOpponentPiece(candidate, color) || board.isEmpty(candidate)) {
-                candidates.add(candidate);
-            }
+            candidates.add(candidate);
         }
 
         return candidates;

@@ -37,13 +37,6 @@ public class Bishop extends Piece {
             while (board.isWithinBounds(new Position(row, column))) {
                 Position candidate = new Position(row, column);
 
-                if (!board.isEmpty(candidate)) {
-                    if (board.isOpponentPiece(candidate, color)) {
-                        candidates.add(candidate);
-                    }
-                    break;
-                }
-
                 candidates.add(candidate);
                 row    += direction[0];
                 column += direction[1];
