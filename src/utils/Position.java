@@ -139,7 +139,7 @@ public class Position {
         return Objects.hash(row, column);
     }
 }
-     * Two positions are equal if they share the same row and column.
+    /** Two positions are equal if they share the same row and column.
      *
      * @param obj object to compare
      * @return true if both positions represent the same square
