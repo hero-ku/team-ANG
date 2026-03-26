@@ -9,6 +9,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * A bishop piece.
+ */
 public class Bishop extends Piece {
     public Bishop(Color color, Position position) {
         super(color, position);

@@ -9,6 +9,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * A knight piece.
+ */
 public class Knight extends Piece {
     public Knight(Color color, Position position) {
         super(color, position);

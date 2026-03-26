@@ -8,6 +8,9 @@ import utils.Position;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A king piece.
+ */
 public class King extends Piece {
     public King(Color color, Position position) {
         super(color, position);

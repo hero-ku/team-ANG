@@ -9,6 +9,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * A pawn piece.
+ */
 public class Pawn extends Piece {
     public Pawn(Color color, Position position) {
         super(color, position);
