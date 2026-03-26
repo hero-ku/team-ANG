@@ -17,6 +17,15 @@ Section 255
 ## How to play
 - On your turn, enter the current position of the piece you want to use, case-insensitive, followed by space and the position you want to move it to. For example, these are all valid inputs: `e2 e4`, ` e2  E4`, `    E2 E4`. 
 
+# Features
+- Displaying board positions and pieces - IMPLEMENTED
+- Making turns and moving pieces - IMPLEMENTED
+- Capturing pieces - IMPLEMENTED
+- Doc comments and generated documentation - IMPLEMENTED
+- Movement patterns of each piece - IMPLEMENTED
+- Check and checkmate - NOT IMPLEMENTED
+- Castling and pawn promotion - NOT IMPLEMENTED
+
 # Java Details
 This program was compiled and tested for:
 ```
