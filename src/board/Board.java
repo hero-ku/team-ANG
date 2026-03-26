@@ -123,7 +123,11 @@ public class Board {
         return piece != null && piece.getColor() != color;
     }
 
-    // Returns an unmodifiable view of captured pieces in the order they were captured
+    /**
+     * Returns an unmodifiable view of captured pieces in the order they were captured.
+     *
+     * @return The unmodifiable list.
+     * */
     public List<Piece> getCapturedPieces() {
         return Collections.unmodifiableList(capturedPieces);
     }
