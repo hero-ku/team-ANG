@@ -1,0 +1,69 @@
+package piece;
+
+import board.Board;
+import utils.Color;
+import utils.Position;
+
+import java.util.Collection;
+
+public abstract class Piece {
+    protected Position position;
+    protected final Color color;
+
+    public Piece(Color color, Position position)  {
+        this.position = position;
+        this.color = color;
+    }
+
+    public Color getColor() {
+        return color;
+    }
+    public Position getPosition() {
+        return position;
+    }
+
+    protected int getDirection() {
+        return this.color == Color.WHITE ? -1 : 1;
+    }
+
+    /**
+     * Moves the piece to the given position.
+     *
+     * @param position The position to move to.
+     */
+    public void move(Position position) {
+        this.position = position;
+    }
+
+    /**
+     * Returns a letter that represents the piece (e.g. 'K' for King).
+     *
+     * @return The letter.
+     */
+    public abstract String getPieceLetter();
+
+    /**
+     * Returns a code that represents the piece (e.g. 'wK' for white King).
+     *
+     * @return The code.
+     */
+    public String getDisplayCode() {
+        return (this.color == Color.WHITE ? "w" : "b") + getPieceLetter();
+    }
+
+    /**
+     * Returns all legal destination squares for this piece.
+     * Filters raw candidates down to moves that are within bounds,
+     * not occupied by a friendly piece, do not leave
+     * the moving side's king in check.
+     *
+     * @param board current board state
+     * @return collection of legal destination positions
+     */
+    public Collection<Position> possibleMoves(Board board) {
+        // TODO: Detect if move will put player in check
+        return this.candidateMoves(board).stream().filter((move) -> board.isWithinBounds(move) && board.getPiece(move) == null || board.getPiece(move).getColor() != this.color).toList();
+    }
+
+    protected abstract Collection<Position> candidateMoves(Board board);
+}

@@ -5,4 +5,23 @@ Section 255
 - Andrew Lynch
 - Gaurav Paneru
 - Nischal Rimal
--Manish Bishwakarma
+- Manish Gadal
+
+# Instructions
+- Clone the repository.
+- Open a shell terminal (Bash, Zsh, Git Bash, etc.) in the directory.
+- Run `javac -d out $(find src -name "*.java")` to compile the program.
+- Run `java -classpath out/ Main` to run the program.
+- Or use IntelliJ IDEA to run the program.
+
+## How to play
+- On your turn, enter the current position of the piece you want to use, case-insensitive, followed by space and the position you want to move it to. For example, these are all valid inputs: `e2 e4`, ` e2  E4`, `    E2 E4`. 
+
+# Java Details
+This program was compiled and tested for:
+```
+openjdk 21.0.6 2025-01-21 LTS
+OpenJDK Runtime Environment Temurin-21.0.6+7 (build 21.0.6+7-LTS)
+OpenJDK 64-Bit Server VM Temurin-21.0.6+7 (build 21.0.6+7-LTS, mixed mode)
+```
+It was built with IntelliJ IDEA's built-in build tool.

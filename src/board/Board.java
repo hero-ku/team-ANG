@@ -1,6 +1,8 @@
 package board;
 
-import pieces.*;
+import piece.*;
+import piece.pieces.*;
+import utils.Color;
 import utils.Position;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -93,7 +95,7 @@ public class Board {
         if (!isWithinBounds(position)) {
             return null;
         }
-        return squares[position.getRow()][position.getColumn()];
+        return squares[position.row()][position.column()];
     }
 
     /**
@@ -101,8 +103,8 @@ public class Board {
      */
     public boolean isWithinBounds(Position position) {
         return position != null
-                && position.getRow() >= 0 && position.getRow() < 8
-                && position.getColumn() >= 0 && position.getColumn() < 8;
+                && position.row() >= 0 && position.row() < 8
+                && position.column() >= 0 && position.column() < 8;
     }
 
     /**
@@ -153,8 +155,8 @@ public class Board {
             capturedPieces.add(destinationPiece);
         }
 
-        squares[to.getRow()][to.getColumn()] = piece;
-        squares[from.getRow()][from.getColumn()] = null;
+        squares[to.row()][to.column()] = piece;
+        squares[from.row()][from.column()] = null;
         piece.move(to);
         return true;
     }
