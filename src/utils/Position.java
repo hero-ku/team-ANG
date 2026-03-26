@@ -1,5 +1,7 @@
 package utils;
 
+import java.util.Objects;
+
 /**
  * Represents a square on the chessboard using row and column indices.
  *

@@ -1,7 +1,8 @@
 import game.Game;
 
-// Program entry point
-
+/**
+ *Program entry point
+ */
 public class Main {
     /*
      Starts the chess game
