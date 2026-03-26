@@ -86,7 +86,7 @@ public abstract class Piece {
      */
     public Collection<Position> possibleMoves(Board board) {
         // TODO: Detect if move will put player in check
-        return this.candidateMoves(board).stream().filter((move) -> board.isWithinBounds(move) && board.getPiece(move) == null || board.getPiece(move).getColor() != this.color).toList();
+        return this.candidateMoves(board).stream().filter((move) -> board.isWithinBounds(move) && (board.getPiece(move) == null || board.getPiece(move).getColor() != this.color)).toList();
     }
 
     /**
