@@ -7,21 +7,42 @@ import utils.Position;
 import java.util.Collection;
 
 public abstract class Piece {
+    /**
+     * The current position of the piece.
+     */
     protected Position position;
+    /**
+     * The color representing the player to whom the piece belongs.
+     */
     protected final Color color;
 
+    /**
+     * Creates a new piece given color and initial position.
+     */
     public Piece(Color color, Position position)  {
         this.position = position;
         this.color = color;
     }
 
+    /**
+     * Gets the color of the piece.
+     * @return The color.
+     */
     public Color getColor() {
         return color;
     }
+    /**
+     * Gets the current position of the piece.
+     * @return The current position.
+     */
     public Position getPosition() {
         return position;
     }
 
+    /**
+     * Gets the hypothetical direction away from the side of the player who owns the piece.
+     * @return 1 if the piece's color is black, -1 if it is white.
+     */
     protected int getDirection() {
         return this.color == Color.WHITE ? -1 : 1;
     }
@@ -65,5 +86,10 @@ public abstract class Piece {
         return this.candidateMoves(board).stream().filter((move) -> board.isWithinBounds(move) && board.getPiece(move) == null || board.getPiece(move).getColor() != this.color).toList();
     }
 
+    /**
+     * Gets the candidate moves for the piece, i.e. all possible positions it could move to geometrically, without accounting for check or pieces in the way.
+     *
+     * @return A collection of positions representing the destinations of the possible moves.
+     */
     protected abstract Collection<Position> candidateMoves(Board board);
 }
