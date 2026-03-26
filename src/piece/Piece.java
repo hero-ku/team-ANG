@@ -6,6 +6,9 @@ import utils.Position;
 
 import java.util.Collection;
 
+/**
+ * Represents a piece on the board or captured in the course of play.
+ */
 public abstract class Piece {
     /**
      * The current position of the piece.
