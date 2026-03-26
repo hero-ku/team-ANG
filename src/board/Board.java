@@ -18,8 +18,9 @@ public class Board {
 
     /**
      *8x8 grid; null entries represent empty squares
-      private final Piece[][] squares;
      */
+    private final Piece[][] squares;
+
     /**
      *Pieces removed from play, in the order they were captured
      */
