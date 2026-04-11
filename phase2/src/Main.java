@@ -1,14 +1,8 @@
-package gui;
+import gui.ChessWindow;
 
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 
-/**
- * Entry point for Phase 2 GUI.
- * Separate from Phase 1's Main.java.
- *
- * @author Gaurav Paneru
- */
-public class MainGUI {
+public class Main {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             ChessWindow window = new ChessWindow();
