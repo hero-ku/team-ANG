@@ -1,0 +1,72 @@
+package board;
+
+import pieces.Piece;
+import pieces.PieceColor;
+import pieces.PieceType;
+import position.Position;
+
+/**
+ * Holds the 8x8 board state. No Swing code here.
+ * Teammates call movePiece() and getPiece() to interact with the board.
+ *
+ * @author Gaurav Paneru
+ */
+public class BoardModel {
+
+    private Piece[][] grid;
+
+    public BoardModel() {
+        grid = new Piece[8][8];
+        setupInitialPositions();
+    }
+
+    /** Places all 32 pieces in standard starting positions. */
+    public void setupInitialPositions() {
+        for (int r = 0; r < 8; r++)
+            for (int c = 0; c < 8; c++)
+                grid[r][c] = null;
+
+        PieceType[] backRank = {
+                PieceType.ROOK, PieceType.KNIGHT, PieceType.BISHOP, PieceType.QUEEN,
+                PieceType.KING, PieceType.BISHOP, PieceType.KNIGHT, PieceType.ROOK
+        };
+
+        for (int col = 0; col < 8; col++) {
+            grid[0][col] = new Piece(backRank[col], PieceColor.WHITE, new Position(0, col));
+            grid[1][col] = new Piece(PieceType.PAWN,  PieceColor.WHITE, new Position(1, col));
+            grid[7][col] = new Piece(backRank[col], PieceColor.BLACK, new Position(7, col));
+            grid[6][col] = new Piece(PieceType.PAWN,  PieceColor.BLACK, new Position(6, col));
+        }
+    }
+
+    /**
+     * Returns the piece at the given position, or null if empty.
+     */
+    public Piece getPiece(Position position) {
+        if (!position.isValid()) return null;
+        return grid[position.getRow()][position.getCol()];
+    }
+
+    /**
+     * Moves a piece from 'from' to 'to'. Returns any captured piece, or null.
+     * No legality checking — caller is responsible for validation.
+     */
+    public Piece movePiece(Position from, Position to) {
+        Piece moving   = grid[from.getRow()][from.getCol()];
+        Piece captured = grid[to.getRow()][to.getCol()];
+        grid[to.getRow()][to.getCol()]     = moving;
+        grid[from.getRow()][from.getCol()] = null;
+        if (moving != null) moving.setPosition(to);
+        return captured;
+    }
+
+    /** Returns whether a square is empty. */
+    public boolean isEmpty(Position position) {
+        return getPiece(position) == null;
+    }
+
+    /** Resets the board to the starting position. */
+    public void reset() {
+        setupInitialPositions();
+    }
+}
