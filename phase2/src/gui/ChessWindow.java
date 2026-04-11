@@ -18,10 +18,11 @@ import java.awt.*;
  *   switchTurn()      — advances play to the other player
  *   resetTurn()       — resets back to WHITE (call alongside BoardModel.reset())
  *
- * Movement (Phase 2 — no legality checking, no captures):
- *   Click a friendly piece to select it, then click any empty square to move.
- *   Clicking a different friendly piece re-selects. Clicking an occupied square
- *   does nothing. Selection is cleared after every successful move.
+ * Movement — two input methods, same validation rules:
+ *   Click-to-move: click a friendly piece to select it, then click an empty
+ *                  square to move it there.
+ *   Drag-to-move:  press on a friendly piece, drag to an empty square, release.
+ * In both cases the turn switches automatically after a successful move.
  *
  * @author Gaurav Paneru
  */
@@ -37,8 +38,8 @@ public class ChessWindow extends JFrame {
     private JLabel statusBar;
 
     /**
-     * The square the player has selected (first click).
-     * Null means no piece is currently selected.
+     * The square chosen by the first click of a click-to-move gesture.
+     * Null when no piece is selected via clicking.
      */
     private Position selectedPosition;
 
@@ -55,6 +56,7 @@ public class ChessWindow extends JFrame {
         add(buildStatusBar(), BorderLayout.SOUTH);
 
         registerClickListener();
+        registerDragListener();
 
         pack();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -63,13 +65,13 @@ public class ChessWindow extends JFrame {
     }
 
     // -----------------------------------------------------------------------
-    //  Movement logic
+    //  Click-to-move
     // -----------------------------------------------------------------------
 
     /**
-     * Wires up the two-click move flow to ChessBoardPanel.
-     * First click  → selects a friendly piece.
-     * Second click → moves it to an empty square, then switches turns.
+     * Two-click move flow.
+     * First click  → select a friendly piece.
+     * Second click → move it to an empty square and switch turns.
      */
     private void registerClickListener() {
         boardPanel.addSquareClickListener((row, col) -> {
@@ -77,42 +79,79 @@ public class ChessWindow extends JFrame {
             Piece    target  = boardModel.getPiece(clicked);
 
             if (selectedPosition == null) {
-                // ── Phase 1: nothing selected yet ──────────────────────────
-                // Only accept a click on a piece that belongs to the active player.
+                // Nothing selected yet — accept only a friendly piece.
                 if (target != null && target.getColor() == currentTurn) {
                     selectedPosition = clicked;
                     boardPanel.setSelectedSquare(clicked);
                 }
-                // Clicking an empty square or an enemy piece does nothing.
 
             } else {
-                // ── Phase 2: a piece is already selected ───────────────────
                 if (clicked.equals(selectedPosition)) {
-                    // Clicked the same square again → deselect.
+                    // Same square clicked again → deselect.
                     clearSelection();
 
                 } else if (target != null && target.getColor() == currentTurn) {
-                    // Clicked a different friendly piece → re-select it.
+                    // Different friendly piece → re-select it.
                     selectedPosition = clicked;
                     boardPanel.setSelectedSquare(clicked);
 
                 } else if (target != null) {
-                    // Clicked an occupied square (enemy piece) → not allowed yet,
-                    // just deselect so the player can try again.
+                    // Occupied by an enemy → not allowed yet, deselect.
                     clearSelection();
 
                 } else {
-                    // Clicked an empty square → execute the move.
-                    boardModel.movePiece(selectedPosition, clicked);
+                    // Empty square → execute move.
+                    executeMove(selectedPosition, clicked);
                     clearSelection();
-                    switchTurn();
-                    boardPanel.repaint();
                 }
             }
         });
     }
 
-    /** Removes the current selection from both this class and the board panel. */
+    // -----------------------------------------------------------------------
+    //  Drag-to-move
+    // -----------------------------------------------------------------------
+
+    /**
+     * Single-gesture move flow.
+     * Press on a friendly piece, drag to an empty square, release to move.
+     * If the destination is invalid the move is silently cancelled.
+     */
+    private void registerDragListener() {
+        boardPanel.addDragDropListener((fromRow, fromCol, toRow, toCal) -> {
+            Position from = new Position(fromRow, fromCol);
+            Position to   = new Position(toRow,   toCal);
+
+            Piece moving = boardModel.getPiece(from);
+
+            // Validate: must be the active player's piece dropped onto an empty square.
+            if (moving == null)                           return;
+            if (moving.getColor() != currentTurn)         return;
+            if (from.equals(to))                          return;   // dropped on itself
+            if (!boardModel.isEmpty(to))                  return;   // occupied
+
+            // A drag always clears any pending click-selection first.
+            clearSelection();
+            executeMove(from, to);
+        });
+    }
+
+    // -----------------------------------------------------------------------
+    //  Shared move execution
+    // -----------------------------------------------------------------------
+
+    /**
+     * Applies the move on the model, switches the turn, and repaints.
+     * Called by both the click and drag handlers once their own validation
+     * has passed.
+     */
+    private void executeMove(Position from, Position to) {
+        boardModel.movePiece(from, to);
+        switchTurn();
+        boardPanel.repaint();
+    }
+
+    /** Clears the click-selection state in both this class and the board panel. */
     private void clearSelection() {
         selectedPosition = null;
         boardPanel.setSelectedSquare(null);
@@ -122,18 +161,14 @@ public class ChessWindow extends JFrame {
     //  Turn management — public API for teammates
     // -----------------------------------------------------------------------
 
-    /**
-     * Returns whose turn it currently is.
-     * Teammate 2 calls this before executing a move to validate piece color.
-     */
+    /** Returns whose turn it currently is. */
     public PieceColor getCurrentTurn() {
         return currentTurn;
     }
 
     /**
-     * Flips the active player (WHITE → BLACK or BLACK → WHITE)
-     * and refreshes the status bar.
-     * Teammate 2 calls this after every successful move.
+     * Flips the active player and refreshes the status bar.
+     * Called automatically after every successful move.
      */
     public void switchTurn() {
         currentTurn = currentTurn.opposite();
@@ -154,9 +189,8 @@ public class ChessWindow extends JFrame {
     //  Internal helpers
     // -----------------------------------------------------------------------
 
-    /** Builds and stores the status bar; must be called once during construction. */
     private JLabel buildStatusBar() {
-        statusBar = new JLabel("");
+        statusBar = new JLabel("", SwingConstants.LEFT);
         statusBar.setFont(new Font("SansSerif", Font.PLAIN, 13));
         statusBar.setOpaque(true);
         statusBar.setBackground(new Color(40, 24, 14));
@@ -166,7 +200,6 @@ public class ChessWindow extends JFrame {
         return statusBar;
     }
 
-    /** Synchronises the status bar label with currentTurn. */
     private void updateStatusBar() {
         String player = (currentTurn == PieceColor.WHITE) ? "White" : "Black";
         statusBar.setText("  " + player + "'s turn");
@@ -176,7 +209,7 @@ public class ChessWindow extends JFrame {
     //  Accessors for teammates
     // -----------------------------------------------------------------------
 
-    /** Returns the board panel (teammate 2 registers click listener here). */
+    /** Returns the board panel (teammate 2 registers listeners here). */
     public ChessBoardPanel getBoardPanel() { return boardPanel; }
 
     /** Returns the board model (teammate 2 calls movePiece here). */
