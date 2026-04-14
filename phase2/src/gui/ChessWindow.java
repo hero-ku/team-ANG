@@ -330,7 +330,7 @@ public class ChessWindow extends JFrame {
     }
 
     // -----------------------------------------------------------------------
-    //  Build history panel UI (Manish — Extra Feature 3)
+    //  Build history panel UI (Manish — Extra Feature 3) this with extra 
     // -----------------------------------------------------------------------
 
     /**
@@ -448,10 +448,6 @@ public class ChessWindow extends JFrame {
         selectedPosition = null;
         boardPanel.setSelectedSquare(null);
     }
-
-    // -----------------------------------------------------------------------
-    //  Accessors for teammates
-    // -----------------------------------------------------------------------
 
     public ChessBoardPanel getBoardPanel() { return boardPanel; }
     public BoardModel      getBoardModel() { return boardModel; }
