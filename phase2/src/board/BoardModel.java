@@ -9,6 +9,9 @@ import position.Position;
  * Holds the 8x8 board state. No Swing code here.
  * Teammates call movePiece() and getPiece() to interact with the board.
  *
+ * Phase 2 addition (Manish Bishwakarma):
+ *   undoMove() — reverses a previously applied move for the Undo feature.
+ *
  * @author Gaurav Paneru
  */
 public class BoardModel {
@@ -48,8 +51,8 @@ public class BoardModel {
     }
 
     /**
-     * Moves a piece from 'from' to 'to'. Returns any captured piece, or null.
-     * No legality checking — caller is responsible for validation.
+     * Moves a piece from {@code from} to {@code to}. Returns any captured piece,
+     * or null. No legality checking — caller is responsible for validation.
      */
     public Piece movePiece(Position from, Position to) {
         Piece moving   = grid[from.getRow()][from.getCol()];
@@ -58,6 +61,25 @@ public class BoardModel {
         grid[from.getRow()][from.getCol()] = null;
         if (moving != null) moving.setPosition(to);
         return captured;
+    }
+
+    /**
+     * Reverses a previously applied move.
+     * Restores the moved piece to {@code from} and puts any captured piece
+     * back on {@code to}. Called by ChessWindow when the Undo button is pressed.
+     *
+     * @param from          the square the piece was on before the move
+     * @param to            the square the piece landed on
+     * @param capturedPiece the piece that was on {@code to} before the move
+     *                      (may be null if the square was empty)
+     * @author Manish Bishwakarma
+     */
+    public void undoMove(Position from, Position to, Piece capturedPiece) {
+        Piece movedPiece = grid[to.getRow()][to.getCol()];
+        grid[from.getRow()][from.getCol()] = movedPiece;
+        grid[to.getRow()][to.getCol()]     = capturedPiece;
+        if (movedPiece    != null) movedPiece.setPosition(from);
+        if (capturedPiece != null) capturedPiece.setPosition(to);
     }
 
     /** Returns whether a square is empty. */
