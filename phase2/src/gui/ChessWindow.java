@@ -10,15 +10,18 @@ import position.Position;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.ArrayDeque;
 
 /**
  * Main application window. Extends JFrame following the professor's
  * "Using Inheritance to Customize Frames" pattern.
  * Teammates access the board via getBoardPanel() and getBoardModel().
+ *
+ * Feature 1 (Menu Bar) and Feature 2 (Settings) are wired here via
+ * {@link ChessMenuBar.MenuCallbacks}.
  *
  * Turn management:
  *   getCurrentTurn()  — returns whose turn it is (WHITE or BLACK)
@@ -86,6 +89,10 @@ public class ChessWindow extends JFrame {
         boardModel = new BoardModel();
         boardPanel = new ChessBoardPanel(boardModel);
 
+        // ── Menu bar (Feature 1) ──────────────────────────────────────────
+        setJMenuBar(new ChessMenuBar(this, this));
+
+        // ── Layout ───────────────────────────────────────────────────────
         setLayout(new BorderLayout());
         add(boardPanel,          BorderLayout.CENTER);
         add(buildHistoryPanel(), BorderLayout.EAST);
@@ -150,7 +157,7 @@ public class ChessWindow extends JFrame {
             // Must be the active player's piece.
             if (moving == null || moving.getColor() != currentTurn) return;
             // Can't drop on a friendly piece.
-            if (dest   != null && dest.getColor()   == currentTurn) return;
+            if (dest != null && dest.getColor()   == currentTurn) return;
             // Dropping on itself is a no-op.
             if (from.equals(to))                                     return;
 
@@ -237,6 +244,8 @@ public class ChessWindow extends JFrame {
         updateCapturedLabels();
         resetTurn();
         boardPanel.repaint();
+
+        switchTurn();
     }
 
     // -----------------------------------------------------------------------
@@ -330,7 +339,7 @@ public class ChessWindow extends JFrame {
     }
 
     // -----------------------------------------------------------------------
-    //  Build history panel UI (Manish — Extra Feature 3) this with extra 
+    //  Build history panel UI (Manish — Extra Feature 3) this with extra
     // -----------------------------------------------------------------------
 
     /**
@@ -425,8 +434,106 @@ public class ChessWindow extends JFrame {
     }
 
     // -----------------------------------------------------------------------
+    //  ChessMenuBar.MenuCallbacks — Feature 1
+    // -----------------------------------------------------------------------
+
+    /**
+     * Resets the board and turn counter to the initial state.
+     * Called when the user chooses Game → New Game.
+     */
+    @Override
+    public void onNewGame() {
+        boardModel.reset();
+        resetTurn();
+        boardPanel.repaint();
+    }
+
+    /**
+     * Builds a SaveData snapshot of the current board state.
+     * Called by ChessMenuBar when the user chooses Game → Save Game.
+     */
+    @Override
+    public ChessMenuBar.SaveData onSaveRequested() {
+        List<String> cells = new ArrayList<>();
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                Piece p = boardModel.getPiece(new Position(row, col));
+                if (p != null) {
+                    // Format: "row col COLOR TYPE"
+                    cells.add(row + " " + col + " "
+                            + p.getColor().name() + " "
+                            + p.getType().name());
+                }
+            }
+        }
+        return new ChessMenuBar.SaveData(currentTurn.name(), cells);
+    }
+
+    /**
+     * Restores the board from a previously saved SaveData.
+     * Called by ChessMenuBar after a successful file load.
+     */
+    @Override
+    public void onGameLoaded(ChessMenuBar.SaveData data) {
+        // Clear the grid manually by resetting then overwriting
+        boardModel.reset();
+
+        // Wipe all pieces (reset() sets standard positions; we need a blank board)
+        // We achieve this by calling reset() and then overwriting every cell.
+        // BoardModel.reset() re-places pieces, so we clear them first:
+        clearBoardGrid();
+
+        // Parse and place pieces from the save file
+        for (String cell : data.cells) {
+            String[] parts = cell.split(" ");
+            if (parts.length != 4) continue;
+            try {
+                int        row   = Integer.parseInt(parts[0]);
+                int        col   = Integer.parseInt(parts[1]);
+                PieceColor color = PieceColor.valueOf(parts[2]);
+                PieceType  type  = PieceType.valueOf(parts[3]);
+                Position   pos   = new Position(row, col);
+                boardModel.placePiece(new Piece(type, color, pos), pos);
+            } catch (Exception ignored) { }
+        }
+
+        // Restore whose turn it is
+        try {
+            currentTurn = PieceColor.valueOf(data.currentTurn);
+        } catch (Exception ignored) {
+            currentTurn = PieceColor.WHITE;
+        }
+
+        clearSelection();
+        updateStatusBar();
+        boardPanel.repaint();
+    }
+
+    /**
+     * Opens the Settings window (Feature 2).
+     * Called by ChessMenuBar when the user chooses Settings → Customize.
+     */
+    @Override
+    public void onOpenSettings() {
+        new SettingsWindow(this, boardPanel);
+    }
+
+    // -----------------------------------------------------------------------
     //  Internal helpers
     // -----------------------------------------------------------------------
+
+    /**
+     * Clears every cell of the board without going through reset().
+     * Uses BoardModel.movePiece in a way that simply removes everything
+     * by placing null — we do this via a dedicated helper on BoardModel.
+     */
+    private void clearBoardGrid() {
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                boardModel.clearCell(new Position(row, col));
+            }
+        }
+    }
 
     private JLabel buildStatusBar() {
         statusBar = new JLabel("", SwingConstants.LEFT);

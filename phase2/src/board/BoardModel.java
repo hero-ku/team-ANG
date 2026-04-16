@@ -9,6 +9,10 @@ import position.Position;
  * Holds the 8x8 board state. No Swing code here.
  * Teammates call movePiece() and getPiece() to interact with the board.
  *
+ * Added for Feature 1 (Save/Load):
+ *   placePiece(Piece, Position) – places an arbitrary piece on the board.
+ *   clearCell(Position)         – removes any piece from a cell.
+ *
  * Phase 2 addition (Manish Bishwakarma):
  *   undoMove() — reverses a previously applied move for the Undo feature.
  *
@@ -80,6 +84,30 @@ public class BoardModel {
         grid[to.getRow()][to.getCol()]     = capturedPiece;
         if (movedPiece    != null) movedPiece.setPosition(from);
         if (capturedPiece != null) capturedPiece.setPosition(to);
+    }
+
+    /**
+     * Places the given piece directly on the board at the given position.
+     * Used by the Load Game feature to restore a saved state.
+     *
+     * @param piece    the piece to place
+     * @param position where to place it
+     */
+    public void placePiece(Piece piece, Position position) {
+        if (!position.isValid()) return;
+        grid[position.getRow()][position.getCol()] = piece;
+        if (piece != null) piece.setPosition(position);
+    }
+
+    /**
+     * Removes any piece from the given cell (sets it to null).
+     * Used by the Load Game feature to wipe the board before restoring.
+     *
+     * @param position the cell to clear
+     */
+    public void clearCell(Position position) {
+        if (!position.isValid()) return;
+        grid[position.getRow()][position.getCol()] = null;
     }
 
     /** Returns whether a square is empty. */
