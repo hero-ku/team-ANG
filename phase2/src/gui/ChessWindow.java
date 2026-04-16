@@ -10,10 +10,11 @@ import position.Position;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
-import java.util.ArrayList;
-import java.util.ArrayDeque;
 
 /**
  * Main application window. Extends JFrame following the professor's
@@ -40,10 +41,17 @@ import java.util.ArrayDeque;
  *       • An Undo button that reverts the last half-move, including restoring
  *         any captured piece to the board
  *
+ * Save / Load:
+ *   Move history is persisted alongside board state. onSaveRequested() appends
+ *   each MoveRecord as a "MOVE …" line after the piece-position lines.
+ *   onGameLoaded() separates the two kinds of lines, restores the board, then
+ *   replays the move lines to fully reconstruct the history panel, captured-
+ *   piece labels, move counter, and undo stack.
+ *
  * @author Gaurav Paneru (base framework),
  *         Manish Bishwakarma (endgame + history panel + undo)
  */
-public class ChessWindow extends JFrame {
+public class ChessWindow extends JFrame implements ChessMenuBar.MenuCallbacks {
 
     // ── Core components ─────────────────────────────────────────────────────
     private final BoardModel      boardModel;
@@ -171,11 +179,9 @@ public class ChessWindow extends JFrame {
     // -----------------------------------------------------------------------
 
     /**
-     * Applies the move on the model, records it in the history stack, updates
-     * the history panel, checks for King capture (endgame), and switches turns.
-     *
-     * Endgame logic (Manish): if the captured piece is a King, the game ends
-     * immediately — declareWinner() shows a dialog and no turn switch occurs.
+     * Applies the move on the model, switches the turn, and repaints.
+     * BoardModel.movePiece handles captures automatically — if an enemy piece
+     * occupies 'to' it is simply replaced.
      */
     private void executeMove(Position from, Position to) {
         Piece moving   = boardModel.getPiece(from);
@@ -299,6 +305,8 @@ public class ChessWindow extends JFrame {
      * Formats a move record and appends it to the history JList.
      * White moves are prefixed with the move number ("1. "); Black moves are
      * indented so pairs line up visually.
+     * Reads and may update {@code currentTurn} and {@code moveNumber}, so
+     * callers must ensure those fields reflect the player who just moved.
      */
     private void addHistoryEntry(MoveRecord record) {
         String prefix;
@@ -314,6 +322,7 @@ public class ChessWindow extends JFrame {
     /**
      * Adds a captured piece to the appropriate player's list and refreshes
      * the Unicode-glyph labels in the history panel.
+     * Reads {@code currentTurn} to decide which list to update.
      */
     private void recordCapture(Piece captured) {
         if (captured == null) return;
@@ -339,7 +348,7 @@ public class ChessWindow extends JFrame {
     }
 
     // -----------------------------------------------------------------------
-    //  Build history panel UI (Manish — Extra Feature 3) this with extra
+    //  Build history panel UI (Manish — Extra Feature 3)
     // -----------------------------------------------------------------------
 
     /**
@@ -449,42 +458,85 @@ public class ChessWindow extends JFrame {
     }
 
     /**
-     * Builds a SaveData snapshot of the current board state.
+     * Builds a SaveData snapshot of the current board and move history.
+     *
+     * The cells list contains two kinds of entries, in this order:
+     *   1. Piece positions:  "row col COLOR TYPE"
+     *   2. Move history:     "MOVE fromRow fromCol toRow toCol MCOLOR MTYPE [CCOLOR CTYPE]"
+     *      — the optional captured-piece fields are present only when a capture occurred.
+     *      — moves are stored in chronological order (oldest first).
+     *
      * Called by ChessMenuBar when the user chooses Game → Save Game.
      */
     @Override
     public ChessMenuBar.SaveData onSaveRequested() {
         List<String> cells = new ArrayList<>();
+
+        // ── 1. Piece positions ───────────────────────────────────────────
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
                 Piece p = boardModel.getPiece(new Position(row, col));
                 if (p != null) {
-                    // Format: "row col COLOR TYPE"
                     cells.add(row + " " + col + " "
                             + p.getColor().name() + " "
                             + p.getType().name());
                 }
             }
         }
+
+        // ── 2. Move history (chronological — oldest first) ───────────────
+        // history is a stack (most recent on top), so reverse it before saving.
+        List<MoveRecord> chronological = new ArrayList<>(history);
+        Collections.reverse(chronological);
+        for (MoveRecord r : chronological) {
+            StringBuilder sb = new StringBuilder("MOVE ");
+            sb.append(r.getFrom().getRow()).append(' ')
+                    .append(r.getFrom().getCol()).append(' ')
+                    .append(r.getTo().getRow()).append(' ')
+                    .append(r.getTo().getCol()).append(' ')
+                    .append(r.getMovedPiece().getColor().name()).append(' ')
+                    .append(r.getMovedPiece().getType().name());
+            if (r.getCapturedPiece() != null) {
+                sb.append(' ')
+                        .append(r.getCapturedPiece().getColor().name()).append(' ')
+                        .append(r.getCapturedPiece().getType().name());
+            }
+            cells.add(sb.toString());
+        }
+
         return new ChessMenuBar.SaveData(currentTurn.name(), cells);
     }
 
     /**
-     * Restores the board from a previously saved SaveData.
+     * Restores the board and full move history from a previously saved SaveData.
+     *
+     * Steps:
+     *   1. Split the cells list into piece-position lines and "MOVE …" lines.
+     *   2. Blank the board and place pieces from the piece-position lines.
+     *   3. Reset all history state, then replay each move line in chronological
+     *      order — this rebuilds the undo stack, the history JList, the
+     *      captured-piece labels, and the move counter exactly as they would
+     *      look if the game had been played live up to that point.
+     *   4. Restore currentTurn from the save file.
+     *
      * Called by ChessMenuBar after a successful file load.
      */
     @Override
     public void onGameLoaded(ChessMenuBar.SaveData data) {
-        // Clear the grid manually by resetting then overwriting
-        boardModel.reset();
 
-        // Wipe all pieces (reset() sets standard positions; we need a blank board)
-        // We achieve this by calling reset() and then overwriting every cell.
-        // BoardModel.reset() re-places pieces, so we clear them first:
+        // ── Step 1: separate piece lines from move lines ─────────────────
+        List<String> pieceCells = new ArrayList<>();
+        List<String> moveCells  = new ArrayList<>();
+        for (String cell : data.cells) {
+            if (cell.startsWith("MOVE ")) moveCells.add(cell);
+            else                           pieceCells.add(cell);
+        }
+
+        // ── Step 2: restore board pieces ─────────────────────────────────
+        boardModel.reset();
         clearBoardGrid();
 
-        // Parse and place pieces from the save file
-        for (String cell : data.cells) {
+        for (String cell : pieceCells) {
             String[] parts = cell.split(" ");
             if (parts.length != 4) continue;
             try {
@@ -494,10 +546,78 @@ public class ChessWindow extends JFrame {
                 PieceType  type  = PieceType.valueOf(parts[3]);
                 Position   pos   = new Position(row, col);
                 boardModel.placePiece(new Piece(type, color, pos), pos);
-            } catch (Exception ignored) { }
+            } catch (Exception ignored) {
+                JOptionPane.showMessageDialog(this,
+                        "Move history failed to parse",
+                        "Saved", JOptionPane.INFORMATION_MESSAGE);
+
+                return;
+            }
         }
 
-        // Restore whose turn it is
+        // ── Step 3: replay move history ───────────────────────────────────
+        // Clear everything before replaying so no stale state remains.
+        history.clear();
+        capturedByWhite.clear();
+        capturedByBlack.clear();
+        historyModel.clear();
+        moveNumber = 1;
+
+        // Replay each move in chronological order (they were saved that way).
+        // addHistoryEntry() and recordCapture() both read currentTurn, so we
+        // temporarily drive currentTurn through the replay sequence here.
+        PieceColor replayTurn = PieceColor.WHITE;
+
+        for (String moveCell : moveCells) {
+            // Format: "MOVE fromRow fromCol toRow toCol MCOLOR MTYPE [CCOLOR CTYPE]"
+            String[] parts = moveCell.substring(5).split(" ");
+            if (parts.length < 6) continue;
+            try {
+                Position   from    = new Position(
+                        Integer.parseInt(parts[0]), Integer.parseInt(parts[1]));
+                Position   to      = new Position(
+                        Integer.parseInt(parts[2]), Integer.parseInt(parts[3]));
+                PieceColor mColor  = PieceColor.valueOf(parts[4]);
+                PieceType  mType   = PieceType.valueOf(parts[5]);
+                Piece      moved   = new Piece(mType, mColor, from);
+
+                Piece captured = null;
+                if (parts.length >= 8) {
+                    PieceColor cColor = PieceColor.valueOf(parts[6]);
+                    PieceType  cType  = PieceType.valueOf(parts[7]);
+                    captured = new Piece(cType, cColor, to);
+                }
+
+                MoveRecord record = new MoveRecord(from, to, moved, captured);
+
+                // Push in chronological order — last push ends up on top of
+                // the stack, which is correct (most recent = top).
+                history.push(record);
+
+                // Drive the helpers with the correct replay turn.
+                currentTurn = replayTurn;
+                recordCapture(captured);
+                addHistoryEntry(record);
+
+                replayTurn = replayTurn.opposite();
+
+            } catch (Exception exception) {
+                boardModel.reset();
+                clearBoardGrid();
+
+                history.clear();
+                capturedByWhite.clear();
+                capturedByBlack.clear();
+                historyModel.clear();
+                moveNumber = 1;
+                clearSelection();
+                updateStatusBar();
+                undoButton.setEnabled(!history.isEmpty());
+                boardPanel.repaint();
+            }
+        }
+
+        // ── Step 4: restore live turn and UI state ────────────────────────
         try {
             currentTurn = PieceColor.valueOf(data.currentTurn);
         } catch (Exception ignored) {
@@ -506,6 +626,7 @@ public class ChessWindow extends JFrame {
 
         clearSelection();
         updateStatusBar();
+        undoButton.setEnabled(!history.isEmpty());
         boardPanel.repaint();
     }
 
@@ -524,8 +645,7 @@ public class ChessWindow extends JFrame {
 
     /**
      * Clears every cell of the board without going through reset().
-     * Uses BoardModel.movePiece in a way that simply removes everything
-     * by placing null — we do this via a dedicated helper on BoardModel.
+     * Used before placing pieces from a save file.
      */
     private void clearBoardGrid() {
         for (int row = 0; row < 8; row++) {
