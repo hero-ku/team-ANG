@@ -1,0 +1,13 @@
+package pieces;
+
+/** Color of a chess piece.
+ *
+ * @author Gaurav Paneru
+ */
+public enum PieceColor {
+    WHITE, BLACK;
+
+    public PieceColor opposite() {
+        return (this == WHITE) ? BLACK : WHITE;
+    }
+}
