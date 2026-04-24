@@ -186,7 +186,7 @@ public class ChessWindow extends JFrame implements ChessMenuBar.MenuCallbacks {
      */
     private boolean executeMove(Position from, Position to) {
         Piece moving   = boardModel.getPiece(from);
-        if (!moving.isValid(, to)) {
+        if (!moving.isValid(boardModel, to)) {
             return false;
         }
 
