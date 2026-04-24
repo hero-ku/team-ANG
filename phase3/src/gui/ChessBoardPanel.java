@@ -1,8 +1,8 @@
 package gui;
 
 import board.BoardModel;
-import pieces.Piece;
-import pieces.PieceColor;
+import piece.Piece;
+import piece.PieceColor;
 import position.Position;
 
 import javax.swing.*;

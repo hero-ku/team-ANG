@@ -1,8 +1,10 @@
 package board;
 
-import pieces.Piece;
-import pieces.PieceColor;
-import pieces.PieceType;
+import piece.Piece;
+import piece.PieceColor;
+import piece.PieceFactory;
+import piece.PieceType;
+import piece.pieces.Pawn;
 import position.Position;
 
 /**
@@ -39,10 +41,10 @@ public class BoardModel {
         };
 
         for (int col = 0; col < 8; col++) {
-            grid[0][col] = new Piece(backRank[col], PieceColor.WHITE, new Position(0, col));
-            grid[1][col] = new Piece(PieceType.PAWN,  PieceColor.WHITE, new Position(1, col));
-            grid[7][col] = new Piece(backRank[col], PieceColor.BLACK, new Position(7, col));
-            grid[6][col] = new Piece(PieceType.PAWN,  PieceColor.BLACK, new Position(6, col));
+            grid[0][col] = PieceFactory.createPiece(backRank[col], PieceColor.WHITE, new Position(0, col));
+            grid[1][col] = new Pawn(PieceColor.WHITE, new Position(1, col));
+            grid[7][col] = PieceFactory.createPiece(backRank[col], PieceColor.BLACK, new Position(7, col));
+            grid[6][col] = new Pawn(PieceColor.BLACK, new Position(6, col));
         }
     }
 

@@ -1,8 +1,8 @@
 package board;
 
-import pieces.Piece;
-import pieces.PieceColor;
-import pieces.PieceType;
+import piece.Piece;
+import piece.PieceColor;
+import piece.PieceType;
 import position.Position;
 
 /**

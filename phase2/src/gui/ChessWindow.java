@@ -2,9 +2,9 @@ package gui;
 
 import board.BoardModel;
 import board.MoveRecord;
-import pieces.Piece;
-import pieces.PieceColor;
-import pieces.PieceType;
+import piece.Piece;
+import piece.PieceColor;
+import piece.PieceType;
 import position.Position;
 
 import javax.swing.*;

@@ -1,6 +1,6 @@
 package board;
 
-import pieces.Piece;
+import piece.Piece;
 import position.Position;
 
 /**

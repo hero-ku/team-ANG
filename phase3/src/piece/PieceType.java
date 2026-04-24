@@ -1,4 +1,4 @@
-package pieces;
+package piece;
 
 /** The six standard chess piece types.
  *

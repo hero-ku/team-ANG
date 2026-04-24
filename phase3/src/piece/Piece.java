@@ -1,5 +1,6 @@
-package pieces;
+package piece;
 
+import board.BoardModel;
 import position.Position;
 
 /**
@@ -8,7 +9,7 @@ import position.Position;
  *
  * @author Gaurav Paneru
  */
-public class Piece {
+public abstract class Piece {
 
     private final PieceType type;
     private final PieceColor color;
@@ -25,6 +26,7 @@ public class Piece {
     public Position getPosition() { return position; }
 
     public void setPosition(Position p) { this.position = p; }
+    public abstract boolean isValid(BoardModel board, Position position);
 
     /**
      * Returns the Unicode chess glyph for this piece.

@@ -1,4 +1,4 @@
-package pieces;
+package piece;
 
 /** Color of a chess piece.
  *

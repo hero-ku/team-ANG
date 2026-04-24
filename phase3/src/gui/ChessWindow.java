@@ -2,9 +2,10 @@ package gui;
 
 import board.BoardModel;
 import board.MoveRecord;
-import pieces.Piece;
-import pieces.PieceColor;
-import pieces.PieceType;
+import piece.Piece;
+import piece.PieceColor;
+import piece.PieceFactory;
+import piece.PieceType;
 import position.Position;
 
 import javax.swing.*;
@@ -183,8 +184,12 @@ public class ChessWindow extends JFrame implements ChessMenuBar.MenuCallbacks {
      * BoardModel.movePiece handles captures automatically — if an enemy piece
      * occupies 'to' it is simply replaced.
      */
-    private void executeMove(Position from, Position to) {
+    private boolean executeMove(Position from, Position to) {
         Piece moving   = boardModel.getPiece(from);
+        if (!moving.isValid(, to)) {
+            return false;
+        }
+
         Piece captured = boardModel.movePiece(from, to);
 
         // Record the move before any endgame check so history is accurate.
@@ -199,10 +204,11 @@ public class ChessWindow extends JFrame implements ChessMenuBar.MenuCallbacks {
         // If the captured piece is a King, the active player wins immediately.
         if (captured != null && captured.getType() == PieceType.KING) {
             declareWinner(currentTurn);
-            return; // Do NOT switch turn; the game is over.
+            return true; // Do NOT switch turn; the game is over.
         }
 
         switchTurn();
+        return true;
     }
 
     // -----------------------------------------------------------------------
@@ -545,7 +551,7 @@ public class ChessWindow extends JFrame implements ChessMenuBar.MenuCallbacks {
                 PieceColor color = PieceColor.valueOf(parts[2]);
                 PieceType  type  = PieceType.valueOf(parts[3]);
                 Position   pos   = new Position(row, col);
-                boardModel.placePiece(new Piece(type, color, pos), pos);
+                boardModel.placePiece(PieceFactory.createPiece(type, color, pos), pos);
             } catch (Exception ignored) {
                 JOptionPane.showMessageDialog(this,
                         "Move history failed to parse",
@@ -579,13 +585,13 @@ public class ChessWindow extends JFrame implements ChessMenuBar.MenuCallbacks {
                         Integer.parseInt(parts[2]), Integer.parseInt(parts[3]));
                 PieceColor mColor  = PieceColor.valueOf(parts[4]);
                 PieceType  mType   = PieceType.valueOf(parts[5]);
-                Piece      moved   = new Piece(mType, mColor, from);
+                Piece      moved   = PieceFactory.createPiece(mType, mColor, from);
 
                 Piece captured = null;
                 if (parts.length >= 8) {
                     PieceColor cColor = PieceColor.valueOf(parts[6]);
                     PieceType  cType  = PieceType.valueOf(parts[7]);
-                    captured = new Piece(cType, cColor, to);
+                    captured = PieceFactory.createPiece(cType, cColor, to);
                 }
 
                 MoveRecord record = new MoveRecord(from, to, moved, captured);

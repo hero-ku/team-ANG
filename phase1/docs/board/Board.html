@@ -92,10 +92,10 @@ loadScripts(document, 'script');</script>
 <hr>
 <div class="type-signature"><span class="modifiers">public class </span><span class="element-name type-name-label">Board</span>
 <span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></span></div>
-<div class="block">Represents the 8x8 chessboard and tracks captured pieces.
- Responsibilities: holds the grid of Piece objects, enforces bounds checks,
- applies moves, and renders the board to the CLI.
- Check and checkmate detection are stubbed out for Phase 1.</div>
+<div class="block">Represents the 8x8 chessboard and tracks captured piece.
+    Responsibilities: holds the grid of Piece objects, enforces bounds checks,
+    applies moves, and renders the board to the CLI.
+    Check and checkmate detection are stubbed out for Phase 1.</div>
 </section>
 <section class="summary">
 <ul class="summary-list">
@@ -109,7 +109,7 @@ loadScripts(document, 'script');</script>
 <div class="table-header col-last">Description</div>
 <div class="col-constructor-name even-row-color"><code><a href="#%3Cinit%3E()" class="member-name-link">Board</a>()</code></div>
 <div class="col-last even-row-color">
-<div class="block">Creates a new board and places all pieces in their standard starting positions</div>
+<div class="block">Creates a new board and places all piece in their standard starting positions</div>
 </div>
 </div>
 </section>
@@ -134,7 +134,7 @@ loadScripts(document, 'script');</script>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a><wbr>&lt;<a href="../piece/Piece.html" title="class in piece">Piece</a>&gt;</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getCapturedPieces()" class="member-name-link">getCapturedPieces</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Returns an unmodifiable view of captured pieces in the order they were captured.</div>
+<div class="block">Returns an unmodifiable view of captured piece in the order they were captured.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="../piece/Piece.html" title="class in piece">Piece</a></code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getPiece(utils.Position)" class="member-name-link">getPiece</a><wbr>(<a href="../utils/Position.html" title="class in utils">Position</a>&nbsp;position)</code></div>
@@ -200,7 +200,7 @@ loadScripts(document, 'script');</script>
 <section class="detail" id="&lt;init&gt;()">
 <h3>Board</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="element-name">Board</span>()</div>
-<div class="block">Creates a new board and places all pieces in their standard starting positions</div>
+<div class="block">Creates a new board and places all piece in their standard starting positions</div>
 </section>
 </li>
 </ul>
@@ -254,7 +254,7 @@ loadScripts(document, 'script');</script>
 <section class="detail" id="getCapturedPieces()">
 <h3>getCapturedPieces</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="../piece/Piece.html" title="class in piece">Piece</a>&gt;</span>&nbsp;<span class="element-name">getCapturedPieces</span>()</div>
-<div class="block">Returns an unmodifiable view of captured pieces in the order they were captured.</div>
+<div class="block">Returns an unmodifiable view of captured piece in the order they were captured.</div>
 <dl class="notes">
 <dt>Returns:</dt>
 <dd>The unmodifiable list.</dd>
