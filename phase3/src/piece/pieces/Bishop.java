@@ -1,4 +1,4 @@
-package piece.pieces;
+cdpackage piece.pieces;
 
 import board.BoardModel;
 import piece.Piece;
