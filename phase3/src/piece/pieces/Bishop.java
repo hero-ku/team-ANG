@@ -1,5 +1,4 @@
-cdpackage piece.pieces;
-
+package piece.pieces;
 import board.BoardModel;
 import piece.Piece;
 import piece.PieceColor;
