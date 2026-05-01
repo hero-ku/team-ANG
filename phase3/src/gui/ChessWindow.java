@@ -215,6 +215,20 @@ public class ChessWindow extends JFrame implements ChessMenuBar.MenuCallbacks {
     }
 
     /**
+     * Returns true if the king of the given color is currently in check.
+     * Reuses isKingInCheck() — extracted here for readability at call sites.
+     */
+    private void notifyCheckIfNeeded(PieceColor colorJustMoved) {
+        PieceColor opponent = (colorJustMoved == PieceColor.WHITE)
+                ? PieceColor.BLACK
+                : PieceColor.WHITE;
+        if (isKingInCheck(opponent)) {
+            String playerName = (opponent == PieceColor.WHITE) ? "White" : "Black";
+            statusBar.setText("  ⚠️  " + playerName + " is in CHECK!");
+        }
+    }
+
+    /**
      * Applies the move on the model, switches the turn, and repaints.
      * BoardModel.movePiece handles captures automatically — if an enemy piece
      * occupies 'to' it is simply replaced.
@@ -251,6 +265,17 @@ public class ChessWindow extends JFrame implements ChessMenuBar.MenuCallbacks {
             return true;
         }
 
+        PieceColor opponent = (currentTurn == PieceColor.WHITE)
+                ? PieceColor.BLACK
+                : PieceColor.WHITE;
+        if (isKingInCheck(opponent)) {
+            String playerName = (opponent == PieceColor.WHITE) ? "White" : "Black";
+            JOptionPane.showMessageDialog(
+                    this,
+                    playerName + "'s King is in check!",
+                    "Check!",
+                    JOptionPane.WARNING_MESSAGE);
+        }
         switchTurn();
         return true;
     }
