@@ -2,5 +2,5 @@ unnamed package
 board
 game
 piece
-piece.pieces
+piece.piece
 utils

@@ -1,4 +1,4 @@
-package pieces;
+package piece;
 
 /**
  * Represents the two player colors in chess.
