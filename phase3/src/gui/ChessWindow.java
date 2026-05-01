@@ -180,19 +180,65 @@ public class ChessWindow extends JFrame implements ChessMenuBar.MenuCallbacks {
     // -----------------------------------------------------------------------
 
     /**
+     * Returns true if the king of the given color is currently attacked
+     * by any enemy piece on the board.
+     * Iterates every square; for each enemy piece it calls isValid() toward
+     * the king's position. If any enemy can legally reach the king, the
+     * king is in check.
+     */
+    private boolean isKingInCheck(PieceColor color) {
+        // Find the king's current position
+        Position kingPos = null;
+        for (int r = 0; r < 8; r++) {
+            for (int c = 0; c < 8; c++) {
+                Piece p = boardModel.getPiece(new Position(r, c));
+                if (p != null && p.getType() == PieceType.KING && p.getColor() == color) {
+                    kingPos = new Position(r, c);
+                    break;
+                }
+            }
+            if (kingPos != null) break;
+        }
+        if (kingPos == null) return false; // King already captured (endgame path)
+
+        // Check if any enemy piece can reach the king
+        PieceColor enemy = (color == PieceColor.WHITE) ? PieceColor.BLACK : PieceColor.WHITE;
+        for (int r = 0; r < 8; r++) {
+            for (int c = 0; c < 8; c++) {
+                Piece p = boardModel.getPiece(new Position(r, c));
+                if (p != null && p.getColor() == enemy) {
+                    if (p.isValid(boardModel, kingPos)) return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * Applies the move on the model, switches the turn, and repaints.
      * BoardModel.movePiece handles captures automatically — if an enemy piece
      * occupies 'to' it is simply replaced.
      */
     private boolean executeMove(Position from, Position to) {
-        Piece moving   = boardModel.getPiece(from);
-        if (!moving.isValid(boardModel, to)) {
+        Piece moving = boardModel.getPiece(from);
+        if (moving == null || !moving.isValid(boardModel, to)) {
             return false;
         }
 
-        Piece captured = boardModel.movePiece(from, to);
+        // ── Check detection: simulate the move, reject if king left in check ──
+        Piece captured = boardModel.movePiece(from, to);          // apply temporarily
+        boolean selfInCheck = isKingInCheck(currentTurn);
+        boardModel.undoMove(from, to, captured);                   // always revert
 
-        // Record the move before any endgame check so history is accurate.
+        if (selfInCheck) {
+            // Illegal — own king would be in check after this move
+            return false;
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
+        // Move is legal — commit it for real
+        captured = boardModel.movePiece(from, to);
+
         MoveRecord record = new MoveRecord(from, to, moving, captured);
         history.push(record);
         recordCapture(captured);
@@ -200,11 +246,9 @@ public class ChessWindow extends JFrame implements ChessMenuBar.MenuCallbacks {
         undoButton.setEnabled(true);
         boardPanel.repaint();
 
-        // ── Endgame check (Manish) ───────────────────────────────────────────
-        // If the captured piece is a King, the active player wins immediately.
         if (captured != null && captured.getType() == PieceType.KING) {
             declareWinner(currentTurn);
-            return true; // Do NOT switch turn; the game is over.
+            return true;
         }
 
         switchTurn();
