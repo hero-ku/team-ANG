@@ -4,8 +4,11 @@ import piece.Piece;
 import piece.PieceColor;
 import piece.PieceFactory;
 import piece.PieceType;
-import piece.pieces.Pawn;
+import piece.pieces.*;
 import position.Position;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Holds the 8x8 board state. No Swing code here.
@@ -17,6 +20,14 @@ import position.Position;
  *
  * Phase 2 addition (Manish Bishwakarma):
  *   undoMove() — reverses a previously applied move for the Undo feature.
+ *
+ * Phase 3 addition (Manish Bishwakarma):
+ *   getPseudoLegalMovesFor(Piece) — dispatches to each piece's own method.
+ *   isInCheck(PieceColor)         — true if that color's King is attacked.
+ *   getLegalMovesFrom(Position)   — filters pseudo-legal moves by simulating
+ *                                   each move and verifying the king is safe.
+ *   isCheckmate(PieceColor)       — true if in check with zero legal moves.
+ *   isStalemate(PieceColor)       — true if NOT in check with zero legal moves.
  *
  * @author Gaurav Paneru
  */
@@ -91,9 +102,6 @@ public class BoardModel {
     /**
      * Places the given piece directly on the board at the given position.
      * Used by the Load Game feature to restore a saved state.
-     *
-     * @param piece    the piece to place
-     * @param position where to place it
      */
     public void placePiece(Piece piece, Position position) {
         if (!position.isValid()) return;
@@ -104,8 +112,6 @@ public class BoardModel {
     /**
      * Removes any piece from the given cell (sets it to null).
      * Used by the Load Game feature to wipe the board before restoring.
-     *
-     * @param position the cell to clear
      */
     public void clearCell(Position position) {
         if (!position.isValid()) return;
@@ -120,5 +126,142 @@ public class BoardModel {
     /** Resets the board to the starting position. */
     public void reset() {
         setupInitialPositions();
+    }
+
+    // -----------------------------------------------------------------------
+    //  Check & Checkmate (Phase 3 — Manish Bishwakarma)
+    // -----------------------------------------------------------------------
+
+    /**
+     * Dispatches to each concrete piece class to collect its pseudo-legal
+     * moves — squares it could reach ignoring whether the king ends up in check.
+     *
+     * @param piece the piece whose moves to generate
+     * @return list of candidate destination squares
+     * @author Manish Bishwakarma
+     */
+    public List<Position> getPseudoLegalMovesFor(Piece piece) {
+        if (piece instanceof King)   return ((King)   piece).getPseudoLegalMoves(this);
+        if (piece instanceof Queen)  return ((Queen)  piece).getPseudoLegalMoves(this);
+        if (piece instanceof Rook)   return ((Rook)   piece).getPseudoLegalMoves(this);
+        if (piece instanceof Bishop) return ((Bishop) piece).getPseudoLegalMoves(this);
+        if (piece instanceof Knight) return ((Knight) piece).getPseudoLegalMoves(this);
+        if (piece instanceof Pawn)   return ((Pawn)   piece).getPseudoLegalMoves(this);
+        return new ArrayList<>();
+    }
+
+    /**
+     * Returns true if the given color's King is currently attacked by any
+     * enemy piece.
+     *
+     * Algorithm: find the King's square, then check every enemy piece to see
+     * if any of its pseudo-legal moves lands on that square.
+     *
+     * @param color the side to check
+     * @return true when that side's King is in check
+     * @author Manish Bishwakarma
+     */
+    public boolean isInCheck(PieceColor color) {
+        // Locate the King
+        Position kingPos = null;
+        for (int r = 0; r < 8; r++) {
+            for (int c = 0; c < 8; c++) {
+                Piece p = grid[r][c];
+                if (p != null && p.getType() == PieceType.KING && p.getColor() == color) {
+                    kingPos = new Position(r, c);
+                    break;
+                }
+            }
+            if (kingPos != null) break;
+        }
+        if (kingPos == null) return false; // King already captured (endgame handled elsewhere)
+
+        // Check if any enemy piece can reach the King's square
+        PieceColor enemy = color.opposite();
+        for (int r = 0; r < 8; r++) {
+            for (int c = 0; c < 8; c++) {
+                Piece p = grid[r][c];
+                if (p == null || p.getColor() != enemy) continue;
+                for (Position dest : getPseudoLegalMovesFor(p)) {
+                    if (dest.equals(kingPos)) return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Returns the list of fully legal moves from a given square — that is,
+     * pseudo-legal moves that do NOT leave the moving side's King in check.
+     *
+     * For each candidate move this method temporarily applies it on the board,
+     * calls isInCheck(), and then immediately reverses it. No permanent state
+     * is changed.
+     *
+     * @param from the square whose piece we are generating moves for
+     * @return list of safe destination squares (may be empty)
+     * @author Manish Bishwakarma
+     */
+    public List<Position> getLegalMovesFrom(Position from) {
+        Piece piece = getPiece(from);
+        if (piece == null) return new ArrayList<>();
+
+        List<Position> legal = new ArrayList<>();
+        for (Position to : getPseudoLegalMovesFor(piece)) {
+            // Simulate the move
+            Piece captured = movePiece(from, to);
+            boolean safe   = !isInCheck(piece.getColor());
+            // Reverse the simulation
+            undoMove(from, to, captured);
+
+            if (safe) legal.add(to);
+        }
+        return legal;
+    }
+
+    /**
+     * Returns true when the given color is in checkmate:
+     * they are currently in check AND every possible move still leaves
+     * their King in check (i.e., no legal move escapes).
+     *
+     * @param color the side to evaluate
+     * @return true if that side is checkmated
+     * @author Manish Bishwakarma
+     */
+    public boolean isCheckmate(PieceColor color) {
+        if (!isInCheck(color)) return false;
+        return hasNoLegalMoves(color);
+    }
+
+    /**
+     * Returns true when the given color is in stalemate:
+     * they are NOT in check but have no legal moves available.
+     *
+     * @param color the side to evaluate
+     * @return true if that side is stalemated
+     * @author Manish Bishwakarma
+     */
+    public boolean isStalemate(PieceColor color) {
+        if (isInCheck(color)) return false;
+        return hasNoLegalMoves(color);
+    }
+
+    /**
+     * Helper: returns true if the given color has zero legal moves on the board.
+     *
+     * @param color the side to check
+     * @return true when no legal move is available
+     * @author Manish Bishwakarma
+     */
+    private boolean hasNoLegalMoves(PieceColor color) {
+        for (int r = 0; r < 8; r++) {
+            for (int c = 0; c < 8; c++) {
+                Piece p = grid[r][c];
+                if (p != null && p.getColor() == color) {
+                    if (!getLegalMovesFrom(new Position(r, c)).isEmpty()) return false;
+                }
+            }
+        }
+        return true;
     }
 }
