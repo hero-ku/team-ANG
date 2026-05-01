@@ -1,3 +1,4 @@
+
 package piece.pieces;
 
 import board.BoardModel;
