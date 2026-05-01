@@ -214,18 +214,29 @@ public class ChessWindow extends JFrame implements ChessMenuBar.MenuCallbacks {
         return false;
     }
 
-    /**
-     * Returns true if the king of the given color is currently in check.
-     * Reuses isKingInCheck() — extracted here for readability at call sites.
-     */
-    private void notifyCheckIfNeeded(PieceColor colorJustMoved) {
-        PieceColor opponent = (colorJustMoved == PieceColor.WHITE)
-                ? PieceColor.BLACK
-                : PieceColor.WHITE;
-        if (isKingInCheck(opponent)) {
-            String playerName = (opponent == PieceColor.WHITE) ? "White" : "Black";
-            statusBar.setText("  ⚠️  " + playerName + " is in CHECK!");
+    private boolean isCheckmate(PieceColor color) {
+        for (int fromR = 0; fromR < 8; fromR++) {
+            for (int fromC = 0; fromC < 8; fromC++) {
+                Piece p = boardModel.getPiece(new Position(fromR, fromC));
+                if (p == null || p.getColor() != color) continue;
+
+                for (int toR = 0; toR < 8; toR++) {
+                    for (int toC = 0; toC < 8; toC++) {
+                        Position from = new Position(fromR, fromC);
+                        Position to   = new Position(toR,   toC);
+                        if (!p.isValid(boardModel, to)) continue;
+
+                        // Simulate the move
+                        Piece captured = boardModel.movePiece(from, to);
+                        boolean stillInCheck = isKingInCheck(color);
+                        boardModel.undoMove(from, to, captured);
+
+                        if (!stillInCheck) return false; // At least one escape exists
+                    }
+                }
+            }
         }
+        return true; // No legal move found — checkmate
     }
 
     /**
@@ -270,12 +281,18 @@ public class ChessWindow extends JFrame implements ChessMenuBar.MenuCallbacks {
                 : PieceColor.WHITE;
         if (isKingInCheck(opponent)) {
             String playerName = (opponent == PieceColor.WHITE) ? "White" : "Black";
-            JOptionPane.showMessageDialog(
-                    this,
-                    playerName + "'s King is in check!",
-                    "Check!",
-                    JOptionPane.WARNING_MESSAGE);
+
+            if (isCheckmate(opponent)) {
+                declareWinner(currentTurn);
+            } else {
+                JOptionPane.showMessageDialog(
+                        this,
+                        playerName + "'s King is in check!",
+                        "Check!",
+                        JOptionPane.WARNING_MESSAGE);
+            }
         }
+
         switchTurn();
         return true;
     }
