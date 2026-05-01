@@ -6,48 +6,80 @@ import piece.PieceColor;
 import piece.PieceType;
 import position.Position;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- * Rook moves any number of squares horizontally or vertically.
- * Cannot jump over pieces.
+ * Rook piece — slides horizontally or vertically any number of squares.
  *
- * @author Gaurav Paneru
+ * Phase 3 (Manish Bishwakarma):
+ *   isValid() and getPseudoLegalMoves() implemented.
  */
 public class Rook extends Piece {
+
+    private static final int[][] DIRECTIONS = {{1,0},{-1,0},{0,1},{0,-1}};
 
     public Rook(PieceColor color, Position position) {
         super(PieceType.ROOK, color, position);
     }
 
+    /**
+     * A Rook move is valid when it stays on the same row or column,
+     * no piece blocks the path, and the destination is empty or enemy.
+     */
     @Override
     public boolean isValid(BoardModel board, Position to) {
-        Position current = this.getPosition();
+        Position from = this.getPosition();
+        int rowDiff = to.getRow() - from.getRow();
+        int colDiff = to.getCol() - from.getCol();
 
-        int rowDiff = to.getRow() - current.getRow();
-        int colDiff = to.getCol() - current.getCol();
+        // Must move along one axis only
+        if (rowDiff != 0 && colDiff != 0) return false;
+        if (rowDiff == 0 && colDiff == 0) return false;
 
-        // Must move along a rank or file — not both, not neither
-        boolean movingAlongRow = (rowDiff == 0 && colDiff != 0);
-        boolean movingAlongCol = (colDiff == 0 && rowDiff != 0);
-        if (!movingAlongRow && !movingAlongCol) return false;
-
-        // Step direction: +1 or -1 along the axis of movement
+        // Walk towards destination, checking for blockers
         int rowStep = Integer.signum(rowDiff);
         int colStep = Integer.signum(colDiff);
-
-        // Walk the path and check every square in between
-        int r = current.getRow() + rowStep;
-        int c = current.getCol() + colStep;
-
+        int r = from.getRow() + rowStep;
+        int c = from.getCol() + colStep;
         while (r != to.getRow() || c != to.getCol()) {
-            if (!board.isEmpty(new Position(r, c))) {
-                return false; // Blocked by a piece in the path
-            }
+            if (!board.isEmpty(new Position(r, c))) return false;
             r += rowStep;
             c += colStep;
         }
 
-        // Destination must be empty or hold an enemy piece
+        // Destination must be empty or hold an enemy
         Piece occupant = board.getPiece(to);
         return occupant == null || occupant.getColor() != this.getColor();
+    }
+
+    /**
+     * Slides in all four straight directions until blocked or board edge.
+     *
+     * @param board the current board state
+     * @return list of reachable destination positions
+     * @author Manish Bishwakarma
+     */
+    public List<Position> getPseudoLegalMoves(BoardModel board) {
+        List<Position> moves = new ArrayList<>();
+        Position from = this.getPosition();
+        for (int[] dir : DIRECTIONS) {
+            int r = from.getRow() + dir[0];
+            int c = from.getCol() + dir[1];
+            while (true) {
+                Position to = new Position(r, c);
+                if (!to.isValid()) break;
+                Piece occupant = board.getPiece(to);
+                if (occupant == null) {
+                    moves.add(to);
+                } else {
+                    if (occupant.getColor() != this.getColor()) moves.add(to); // capture
+                    break; // blocked either way
+                }
+                r += dir[0];
+                c += dir[1];
+            }
+        }
+        return moves;
     }
 }

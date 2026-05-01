@@ -7,77 +7,86 @@ import piece.PieceColor;
 import piece.PieceType;
 import position.Position;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- * Queen chess piece.
+ * Queen piece — combines Rook (straight) and Bishop (diagonal) movement.
+ * Previous implementation incorrectly returned {@code true} for every move.
  *
- * Movement rules:
- *   • Moves any number of squares in any of the eight directions
- *     (horizontal, vertical, or diagonal) — combining Rook and Bishop movement.
- *   • Cannot jump over pieces; the path between from and to must be clear.
- *   • Cannot move to a square occupied by a friendly piece.
- *   • Cannot stay on the same square.
- *
- * @author Nischal Rimal
+ * Phase 3 (Manish Bishwakarma):
+ *   isValid() and getPseudoLegalMoves() properly implemented.
  */
 public class Queen extends Piece {
+
+    private static final int[][] DIRECTIONS = {
+            {1,0},{-1,0},{0,1},{0,-1},   // straight (rook)
+            {1,1},{1,-1},{-1,1},{-1,-1}  // diagonal (bishop)
+    };
 
     public Queen(PieceColor color, Position position) {
         super(PieceType.QUEEN, color, position);
     }
 
     /**
-     * Returns true if moving this Queen to {@code to} is geometrically legal.
-     *
-     * @param board the current board state (used to check path and occupancy)
-     * @param to    the destination square
-     * @return true if the move is valid
+     * A Queen move is valid when it moves along a straight line or diagonal
+     * with no blocking pieces, landing on an empty or enemy square.
      */
     @Override
     public boolean isValid(BoardModel board, Position to) {
-        // Destination must be on the board
-        if (!to.isValid()) return false;
-
-        Position from = getPosition();
-
+        Position from = this.getPosition();
         int rowDiff = to.getRow() - from.getRow();
         int colDiff = to.getCol() - from.getCol();
 
-        // Must actually move somewhere
         if (rowDiff == 0 && colDiff == 0) return false;
 
-        // The Queen moves along a straight line:
-        // horizontal  → rowDiff == 0
-        // vertical    → colDiff == 0
-        // diagonal    → |rowDiff| == |colDiff|
-        boolean horizontal = (rowDiff == 0);
-        boolean vertical   = (colDiff == 0);
-        boolean diagonal   = (Math.abs(rowDiff) == Math.abs(colDiff));
+        // Must be straight or diagonal
+        boolean straight = (rowDiff == 0 || colDiff == 0);
+        boolean diagonal = (Math.abs(rowDiff) == Math.abs(colDiff));
+        if (!straight && !diagonal) return false;
 
-        if (!horizontal && !vertical && !diagonal) return false;
-
-        // Step direction: normalise rowDiff and colDiff to -1, 0, or +1
+        // Check path for blockers
         int rowStep = Integer.signum(rowDiff);
         int colStep = Integer.signum(colDiff);
-
-        // Walk from the square just after 'from' up to (but not including) 'to'.
-        // Every intermediate square must be empty.
-        int currentRow = from.getRow() + rowStep;
-        int currentCol = from.getCol() + colStep;
-
-        while (currentRow != to.getRow() || currentCol != to.getCol()) {
-            Position intermediate = new Position(currentRow, currentCol);
-            if (board.getPiece(intermediate) != null) {
-                // A piece is blocking the path
-                return false;
-            }
-            currentRow += rowStep;
-            currentCol += colStep;
+        int r = from.getRow() + rowStep;
+        int c = from.getCol() + colStep;
+        while (r != to.getRow() || c != to.getCol()) {
+            if (!board.isEmpty(new Position(r, c))) return false;
+            r += rowStep;
+            c += colStep;
         }
 
-        // Cannot capture a friendly piece on the destination
-        Piece target = board.getPiece(to);
-        if (target != null && target.getColor() == getColor()) return false;
+        Piece occupant = board.getPiece(to);
+        return occupant == null || occupant.getColor() != this.getColor();
+    }
 
-        return true;
+    /**
+     * Slides in all eight directions until blocked or board edge.
+     *
+     * @param board the current board state
+     * @return list of reachable destination positions
+     * @author Manish Bishwakarma
+     */
+    public List<Position> getPseudoLegalMoves(BoardModel board) {
+        List<Position> moves = new ArrayList<>();
+        Position from = this.getPosition();
+        for (int[] dir : DIRECTIONS) {
+            int r = from.getRow() + dir[0];
+            int c = from.getCol() + dir[1];
+            while (true) {
+                Position to = new Position(r, c);
+                if (!to.isValid()) break;
+                Piece occupant = board.getPiece(to);
+                if (occupant == null) {
+                    moves.add(to);
+                } else {
+                    if (occupant.getColor() != this.getColor()) moves.add(to);
+                    break;
+                }
+                r += dir[0];
+                c += dir[1];
+            }
+        }
+        return moves;
     }
 }
